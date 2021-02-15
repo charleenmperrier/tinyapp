@@ -12,10 +12,16 @@ const urlDatabase = {
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars)
 });
+app.get("/urls/:shortenedURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortenedURL, longURL: urlDatabase[req.params.shortenedURL] };
+  res.render("urls_show", templateVars);
+});
+
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
