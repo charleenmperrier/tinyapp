@@ -13,7 +13,8 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 app.get("/urls", (req, res) => {
-  res.json(urlDatabase);
+  const templateVars = { urls: urlDatabase };
+  res.render('urls_index', templateVars)
 });
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
