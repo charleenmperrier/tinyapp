@@ -9,7 +9,12 @@ app.post("/urls", (req, res) => {
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 const generateRandomString = function() {
-  
+  let newURLString = '';
+  let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  for (let i = 0; i < 6; i ++) {
+    newURLString += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+  return newURLString;
 };
 
 app.set('view engine', 'ejs')
