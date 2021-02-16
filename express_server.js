@@ -24,9 +24,6 @@ const urlDatabase = {
 };
 
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -50,7 +47,10 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`)
-  // console.log(req.body);
+});
+app.post("/urls/:shortURL/delete", (req,res) => {
+  delete urlDatabase[req.params.shortURL]
+  res.redirect('/urls')
 });
 
 
