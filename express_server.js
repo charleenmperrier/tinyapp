@@ -62,6 +62,12 @@ app.get("/register", (req, res) => {
   }
   res.render("urls_register", templateVars);
 });
+app.get("/login", (req,res) => {
+  const templateVars = {
+    user: users[req.cookies['user_id']]
+  }
+  res.render("urls_login", templateVars);
+});
 
 
 //POST
@@ -79,22 +85,38 @@ app.post("/urls/:shortURL/update", (req,res) => {
   res.redirect(`/urls`);
 });
 app.post("/login", (req, res) => {
-  // const username = req.body.login;
-  // res.cookie('username', username);
+ 
+
+
   res.redirect("/urls");
+});
+app.post("/register", (req, res) => {
+  const userID = generateRandomString();
+  
+  if (req.body.email === '' || req.body.password === '') {
+    console.log('empty string')
+    res.redirect(400, '/register');
+    return
+  }
+ 
+  for (let userName in users) {
+    if (req.body.email === users[userName].email) {
+      console.log('existing email')
+      res.redirect(400, '/register');
+      return
+    }
+  }
+  
+  users[userID] = {id: userID, email: req.body.email, password: req.body.password};
+
+  res.cookie('user_id', userID)
+  console.log(users)
+  res.redirect('/urls');
 });
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
   res.redirect("/urls");
 });
-app.post("/register", (req, res) => {
-  const userID = generateRandomString();
-  users[userID] = {id: userID, email: req.body.email, password: req.body.password};
-  res.cookie('user_id', userID)
-  console.log(users)
-  res.redirect('/urls');
-});
-
 
 
 app.listen(PORT, () => {
