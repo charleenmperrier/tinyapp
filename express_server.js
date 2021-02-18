@@ -17,9 +17,8 @@ const generateRandomString = function() {
   return newURLString;
 };
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-
+  'b2xVn2': { longURL: "http://www.lighthouselabs.ca", userID: 'userRandomID' },
+  '9sm5xK': { longURL: "http://www.google.com", userID: "userRandomID" }
 };
 const users = {
   "userRandomID": {id: "userRandomID", email: "user@example.com", password: "purple-monkey-dinosaur"},
@@ -33,6 +32,10 @@ app.get("/urls", (req, res) => {
   res.render('urls_index', templateVars);
 });
 app.get("/urls/new", (req, res) => {
+  if (!users[req.cookies['user_id']]) {
+    res.redirect('/login');
+    return;
+  }
   const templateVars = {
     user: users[req.cookies['user_id']]
   };
@@ -40,15 +43,11 @@ app.get("/urls/new", (req, res) => {
   
 });
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies['user_id']] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies['user_id']] };
   res.render("urls_show", templateVars);
 });
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  const templateVars = {
-    user: users[req.cookies['user_id']]
-  };
-  res.render("/u/:shortURL", templateVars);
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 app.get("/register", (req, res) => {
@@ -68,7 +67,7 @@ app.get("/login", (req,res) => {
 //POST
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies['user_id'] };
   res.redirect(`/urls/${shortURL}`);
 });
 app.post("/urls/:shortURL/delete", (req,res) => {
@@ -96,13 +95,11 @@ app.post("/login", (req, res) => {
 });
 app.post("/register", (req, res) => {
   const userID = generateRandomString();
-  
   if (req.body.email === '' || req.body.password === '') {
     console.log('empty string');
     res.redirect(400, '/register');
     return;
   }
- 
   for (let userID in users) {
     if (req.body.email === users[userID].email) {
       console.log('existing email');
@@ -110,9 +107,7 @@ app.post("/register", (req, res) => {
       return;
     }
   }
-  
   users[userID] = {id: userID, email: req.body.email, password: req.body.password};
-
   res.cookie('user_id', userID);
   res.redirect('/urls');
 });
@@ -122,5 +117,5 @@ app.post("/logout", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Tinyapp listening on port ${PORT}!`);
 });
