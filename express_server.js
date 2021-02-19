@@ -4,12 +4,14 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override');
 const { getUserByEmail, urlsForUser, generateRandomString } = require('./helpers');
-
+//STORED urls
 const urlDatabase = {
   'b2xVn2': { longURL: "http://www.lighthouselabs.ca", userID: 'userRandomID' },
   '9sm5xK': { longURL: "http://www.google.com", userID: "userRandomID" }
 };
+//USER database
 const users = {
   "userRandomID": {id: "userRandomID", email: "user@example.com", password: "purple-monkey-dinosaur"},
   "user2RandomID": {id: "user2RandomID", email: "user2@example.com", password: "dishwasher-funk"}
@@ -17,6 +19,7 @@ const users = {
 
 app.set('view engine', 'ejs');
 
+app.use(methodOverride('_method'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
@@ -60,23 +63,8 @@ app.get("/login", (req,res) => {
   res.render("urls_login", templateVars);
 });
 
-
-// POST //
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session['user_id'] };
-  res.redirect(`/urls/${shortURL}`);
-});
-app.post("/urls/:shortURL/delete", (req,res) => {
-  const urlObj = urlDatabase[req.params.shortURL];
-  if (urlObj.userID !== req.session['user_id']) {
-    res.status(403).send('access not permitted');
-  } else {
-    delete urlDatabase[req.params.shortURL];
-    res.redirect('/urls');
-  }
-});
-app.post("/urls/:shortURL/update", (req,res) => {
+// PATCH //
+app.patch("/urls/:shortURL/update", (req,res) => {
   const urlObj = urlDatabase[req.params.shortURL];
   if (urlObj.userID !== req.session['user_id']) {
     res.status(403).send('access not permitted');
@@ -85,7 +73,7 @@ app.post("/urls/:shortURL/update", (req,res) => {
     res.redirect(`/urls`);
   }
 });
-app.post("/login", (req, res) => {
+app.patch("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
@@ -98,6 +86,13 @@ app.post("/login", (req, res) => {
       return;
     }
   }
+});
+
+// POST //
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session['user_id'] };
+  res.redirect(`/urls/${shortURL}`);
 });
 app.post("/register", (req, res) => {
   const userID = generateRandomString();
@@ -119,6 +114,16 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+// DELETE //
+app.delete("/urls/:shortURL/delete", (req,res) => {
+  const urlObj = urlDatabase[req.params.shortURL];
+  if (urlObj.userID !== req.session['user_id']) {
+    res.status(403).send('access not permitted');
+  } else {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Tinyapp listening on port ${PORT}!`);
